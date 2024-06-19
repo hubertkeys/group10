@@ -158,7 +158,7 @@ BEGIN
     
     -- Get the number of people in the room and the number of beds
     SELECT currentOccupancy, bedCount INTO room_occupancy, room_bed_count
-    FROM room WHERE roomNumber = NEW.roomNumber;
+    FROM masela_room WHERE roomNumber = NEW.roomNumber;
 
     -- Check if room is full
     IF room_occupancy + 1 > room_bed_count THEN
@@ -167,9 +167,9 @@ BEGIN
     
     -- Update room occupancy
     IF room_occupancy + 1 = room_bed_count THEN
-        UPDATE room SET currentOccupancy = currentOccupancy + 1, availabilityStatus = 'Full' WHERE roomNumber = NEW.roomNumber;
+        UPDATE masela_room SET currentOccupancy = currentOccupancy + 1, availabilityStatus = 'Full' WHERE roomNumber = NEW.roomNumber;
     ELSE
-        UPDATE room SET currentOccupancy = currentOccupancy + 1 WHERE roomNumber = NEW.roomNumber;
+        UPDATE masela_room SET currentOccupancy = currentOccupancy + 1 WHERE roomNumber = NEW.roomNumber;
     END IF;
 END //
 
@@ -183,13 +183,13 @@ BEGIN
     
     -- Get current occupancy and bed count of the room
     SELECT currentOccupancy, bedCount INTO room_occupancy, room_bed_count
-    FROM room WHERE roomNumber = OLD.roomNumber;
+    FROM masela_room WHERE roomNumber = OLD.roomNumber;
     
     -- Update room occupancy
     IF room_occupancy = room_bed_count THEN
-        UPDATE room SET currentOccupancy = currentOccupancy - 1, availabilityStatus = 'Available' WHERE roomNumber = OLD.roomNumber;
+        UPDATE masela_room SET currentOccupancy = currentOccupancy - 1, availabilityStatus = 'Available' WHERE roomNumber = OLD.roomNumber;
     ELSE
-        UPDATE room SET currentOccupancy = currentOccupancy - 1 WHERE roomNumber = OLD.roomNumber;
+        UPDATE masela_room SET currentOccupancy = currentOccupancy - 1 WHERE roomNumber = OLD.roomNumber;
     END IF;
 END //
 
