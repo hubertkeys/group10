@@ -195,3 +195,198 @@ END //
 
 DELIMITER ;
 
+
+
+
+-- PROCEDURE TO DELETE ADMISSION
+DELIMITER //
+DROP PROCEDURE IF EXISTS delete_admission;
+CREATE PROCEDURE delete_admission(
+    IN patientID INT(5),
+    IN doctorID INT(5)
+)
+BEGIN
+    DELETE FROM moyikwa_admission WHERE patientID = patientID AND doctorsID = doctorID;
+END //
+DELIMITER ;
+
+-- PROCEDURE TO DELETE PRESCRIPTION
+DELIMITER //
+DROP PROCEDURE IF EXISTS delete_prescription;
+CREATE PROCEDURE delete_prescription(
+    IN prescriptionID INT(5)
+)
+BEGIN
+    DELETE FROM keith_prescription WHERE prescriptionID = prescriptionID;
+END //
+DELIMITER ;
+
+-- PROCEDURE TO DELETE PATIENT
+DELIMITER //
+DROP PROCEDURE IF EXISTS delete_patient;
+CREATE PROCEDURE delete_patient(
+    IN patientID INT(5)
+)
+BEGIN
+    DELETE FROM pomba_patient WHERE patientID = patientID;
+END //
+DELIMITER ;
+
+-- PROCEDURE TO DELETE DOCTOR
+DELIMITER //
+DROP PROCEDURE IF EXISTS delete_doctor;
+CREATE PROCEDURE delete_doctor(
+    IN doctorID INT(5)
+)
+BEGIN
+    DELETE FROM zano_doctor WHERE doctorsMedicalLicense = doctorID;
+END //
+DELIMITER ;
+
+-- PROCEDURE TO DELETE ROOM
+DELIMITER //
+DROP PROCEDURE IF EXISTS delete_room;
+CREATE PROCEDURE delete_room(
+    IN room_number VARCHAR(5)
+)
+BEGIN
+    DELETE FROM masela_room WHERE roomNumber = room_number;
+END //
+DELIMITER ;
+
+
+
+
+
+
+-- PROCEDURE TO UPDATE PATIENT
+DELIMITER //
+DROP PROCEDURE IF EXISTS update_patient;
+CREATE PROCEDURE update_patient(
+    IN patientID INT(5),
+    IN Name VARCHAR(150),
+    IN DOB DATE,
+    IN Phone VARCHAR(13),
+    IN Address VARCHAR(255)
+)
+BEGIN
+    UPDATE pomba_patient 
+    SET patientName = Name, patientDOB = DOB, patientPhone = Phone, patientAddress = Address 
+    WHERE patientID = patientID;
+END //
+DELIMITER ;
+
+-- PROCEDURE TO UPDATE DOCTOR
+DELIMITER //
+DROP PROCEDURE IF EXISTS update_doctor;
+CREATE PROCEDURE update_doctor(
+    IN doctorID INT(5),
+    IN Name VARCHAR(150),
+    IN Gender ENUM('M','F'),
+    IN Phone VARCHAR(13),
+    IN Qualification VARCHAR(150)
+)
+BEGIN
+    UPDATE zano_doctor 
+    SET doctorsName = Name, doctorsGender = Gender, doctorsPhone = Phone, doctorsQualification = Qualification 
+    WHERE doctorsMedicalLicense = doctorID;
+END //
+DELIMITER ;
+
+-- PROCEDURE TO UPDATE ROOM
+DELIMITER //
+DROP PROCEDURE IF EXISTS update_room;
+CREATE PROCEDURE update_room(
+    IN room_number VARCHAR(5),
+    IN bed_count INT,
+    IN availability_status ENUM('Available', 'Full', 'UnderMaintenance'),
+    IN room_type ENUM('General', 'Private', 'ICU')
+)
+BEGIN
+    UPDATE masela_room 
+    SET bedCount = bed_count, availabilityStatus = availability_status, roomType = room_type 
+    WHERE roomNumber = room_number;
+END //
+DELIMITER ;
+
+-- PROCEDURE TO UPDATE ADMISSION
+DELIMITER //
+DROP PROCEDURE IF EXISTS update_admission;
+CREATE PROCEDURE update_admission(
+    IN patientID INT(5),
+    IN doctorID INT(5),
+    IN room VARCHAR(5),
+    IN pcondition ENUM('Mild', 'Moderate', 'Severe', 'Critical')
+)
+BEGIN
+    UPDATE moyikwa_admission 
+    SET roomNumber = room, severityOfCondition = pcondition 
+    WHERE patientID = patientID AND doctorsID = doctorID;
+END //
+DELIMITER ;
+
+-- PROCEDURE TO UPDATE PRESCRIPTION
+DELIMITER //
+DROP PROCEDURE IF EXISTS update_prescription;
+CREATE PROCEDURE update_prescription(
+    IN prescriptionID INT(5),
+    IN medication VARCHAR(150),
+    IN startDate DATE
+)
+BEGIN
+    UPDATE keith_prescription 
+    SET medicationName = medication, startDate = startDate 
+    WHERE prescriptionID = prescriptionID;
+END //
+DELIMITER ;
+
+
+
+
+
+
+-- PROCEDURE TO GET PATIENTS BY DOCTOR
+DELIMITER //
+DROP PROCEDURE IF EXISTS get_patients_by_doctor;
+CREATE PROCEDURE get_patients_by_doctor(
+    IN doctorID INT(5)
+)
+BEGIN
+    SELECT pomba_patient.patientID, pomba_patient.patientName, pomba_patient.patientDOB, pomba_patient.patientPhone, pomba_patient.patientAddress
+    FROM pomba_patient
+    INNER JOIN moyikwa_admission ON pomba_patient.patientID = moyikwa_admission.patientID
+    WHERE moyikwa_admission.doctorsID = doctorID;
+END //
+DELIMITER ;
+
+
+-- PROCEDURE TO CHECK DOCTOR AVAILABILITY
+DELIMITER //
+DROP PROCEDURE IF EXISTS check_doctor_availability;
+CREATE PROCEDURE check_doctor_availability(
+    IN doctorID INT(5)
+)
+BEGIN
+    DECLARE patient_count INT;
+    DECLARE doctor_exists INT;
+    
+    -- Check if the doctor ID exists
+    SELECT COUNT(*) INTO doctor_exists FROM zano_doctor WHERE doctorsMedicalLicense = doctorID;
+    
+    IF doctor_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Doctor ID does not exist';
+    ELSE
+        -- Count the number of patients assigned to the doctor
+        SELECT COUNT(*) INTO patient_count FROM moyikwa_admission WHERE doctorsID = doctorID;
+        
+        -- Check if doctor has less than or equal to 2 patients
+        IF patient_count <= 2 THEN
+            SELECT 'Available' AS Availability;
+        ELSE
+            SELECT 'Unavailable' AS Availability;
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+
+
